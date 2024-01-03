@@ -235,6 +235,8 @@ ConvertToClangTargetCXXABI(CppSharp::CppParser::AST::CppAbi abi)
         return TargetCXXABI::iOS;
     case CppSharp::CppParser::AST::CppAbi::iOS64:
         return TargetCXXABI::AppleARM64;
+    case CppSharp::CppParser::AST::CppAbi::WebAssembly:
+        return TargetCXXABI::WebAssembly;
     }
 
     llvm_unreachable("Unsupported C++ ABI.");
@@ -965,15 +967,15 @@ static TagKind ConvertToTagKind(clang::TagTypeKind AS)
 {
     switch (AS)
     {
-    case clang::TagTypeKind::TTK_Struct:
+    case clang::TagTypeKind::Struct:
         return TagKind::Struct;
-    case clang::TagTypeKind::TTK_Interface:
+    case clang::TagTypeKind::Interface:
         return TagKind::Interface;
-    case clang::TagTypeKind::TTK_Union:
+    case clang::TagTypeKind::Union:
         return TagKind::Union;
-    case clang::TagTypeKind::TTK_Class:
+    case clang::TagTypeKind::Class:
         return TagKind::Class;
-    case clang::TagTypeKind::TTK_Enum:
+    case clang::TagTypeKind::Enum:
         return TagKind::Enum;
     }
 
@@ -4256,7 +4258,6 @@ Declaration* Parser::WalkDeclaration(const clang::Decl* D)
         break;
     }
     case Decl::BuiltinTemplate:
-    case Decl::ClassScopeFunctionSpecialization:
     case Decl::PragmaComment:
     case Decl::PragmaDetectMismatch:
     case Decl::Empty:
@@ -4397,7 +4398,7 @@ bool Parser::SetupSourceFiles(const std::vector<std::string>& SourceFiles,
 {
     // Check that the file is reachable.
     clang::ConstSearchDirIterator *Dir = 0;
-    llvm::ArrayRef<std::pair<const clang::FileEntry*, clang::DirectoryEntryRef>> Includers;
+    llvm::ArrayRef<std::pair<clang::CustomizableOptional<clang::FileEntryRef>, clang::DirectoryEntryRef>> Includers;
 
     for (const auto& SourceFile : SourceFiles)
     {
